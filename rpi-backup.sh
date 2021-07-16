@@ -10,13 +10,14 @@ if [ -z $1 ]; then
 	echo "no argument, assume the mount device is /dev/sda1 ? Y/N"
 	read key
 	if [ "$key" = "y" -o "$key" = "Y" ]; then
-		sudo mount -o uid=1000 /dev/sda1 $usbmount
+		sudo mount -o uid=1000 -t exfat /dev/sda2 $usbmount
 	else
 		echo "$0 [backup dest device name], e.g. $0 /dev/sda1"
 		exit 0
 	fi
 else
-	sudo mount -t ntfs-3g -o big_writes $1 $usbmount
+	sudo mount -t exfat $1 $usbmount
+	#sudo mount -t ntfs-3g -o big_writes $1 $usbmount
 fi
 if [ -z "`grep $usbmount /etc/mtab`" ]; then
 	echo "mount fail, exit now"
@@ -32,8 +33,8 @@ echo ===================== part 1, create a new blank img ======================
 #sudo rm $img
 bootsz=`df -P | grep /boot | awk '{print $2}'`
 rootsz=`df -P | grep /dev/root | awk '{print $3}'`
-totalsz=`echo $bootsz $rootsz | awk '{print int(($1+$2)*1.3/4)}'`
-sudo dd if=/dev/zero of=$img bs=4K count=$totalsz
+totalsz=`echo $bootsz $rootsz | awk '{print int(($1+$2)*1.3/4096)}'`
+sudo dd if=/dev/zero of=$img bs=4M count=$totalsz
 
 # format virtual disk
 bootstart=`sudo fdisk -l /dev/mmcblk0 | grep mmcblk0p1 | awk '{print $2}'`
